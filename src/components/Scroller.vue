@@ -458,7 +458,12 @@
       },
 
       touchMove(e) {
-        e.preventDefault()
+        // e.preventDefault()
+        if (!this.formListScroll && e.target.tagName.match(/input|textarea|select/i)) {
+          return
+        } else {
+          e.preventDefault()
+        }
         this.scroller.doTouchMove(e.touches, e.timeStamp)
       },
 
