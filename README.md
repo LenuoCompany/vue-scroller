@@ -55,6 +55,7 @@ https://github.com/wangdahoo/vue-scroller-demo
 | refreshLayerColor | text color of `pull-to-refresh` layer | N | #AAA |
 | loadingLayerColor | text color of `infinite-loading` layer | N | #AAA |
 | minContentHeight | min content height (px) of `scroll-content` | N | 0 |
+| formListScroll | The form `input textarea select` element scrolls | N | `true` |
 
 #### Scroller vm instance methods:
 

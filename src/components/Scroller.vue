@@ -250,9 +250,16 @@
       },
 
       cssClass: String, // content css class
+
       minContentHeight: {
         type: Number,
         default: 0 // px
+      },
+
+      // Yuzi.me 2017.8.1
+      formListScroll: {
+        type: Boolean,
+        default: false
       }
     },
 
@@ -263,6 +270,17 @@
 
       h: function () {
         return widthAndHeightCoerce(this.height)
+      },
+
+      showInfiniteLayer () {
+        let contentHeight = 0 
+        this.content
+          ? contentHeight = this.content.offsetHeight
+          : void 666
+
+        return this.onInfinite
+          ? contentHeight > this.minContentHeight
+          : false
       }
     },
 
@@ -281,20 +299,8 @@
         pullToRefreshLayer: undefined,
         mousedown: false,
         infiniteTimer: undefined,
-        resizeTimer: undefined
-      }
-    },
-
-    computed: {
-      showInfiniteLayer () {
-        let contentHeight = 0 
-        this.content
-          ? contentHeight = this.content.offsetHeight
-          : void 666
-
-        return this.onInfinite
-          ? contentHeight > this.minContentHeight
-          : false
+        resizeTimer: undefined,
+        autoHeightTimer: undefined,
       }
     },
 
@@ -302,7 +308,7 @@
       this.container = document.getElementById(this.containerId)
       this.container.style.width = this.w
       this.container.style.height = this.h
-
+      
       this.content = document.getElementById(this.contentId)
       if (this.cssClass) this.content.classList.add(this.cssClass)
       this.pullToRefreshLayer = this.content.getElementsByTagName("div")[0]
@@ -340,12 +346,12 @@
           this.onRefresh(this.finishPullToRefresh)
         })
       }
-
+      
       // enable infinite loading
       if (this.onInfinite) {
+        
         this.infiniteTimer = setInterval(() => {
           let {left, top, zoom} = this.scroller.getValues()
-
           if (top + 60 > this.content.offsetHeight - this.container.clientHeight) {
             if (this.loadingState) return
             this.loadingState = 1
@@ -384,10 +390,30 @@
           this.resize()
         }
       }, 10);
+
+
+      // onContainerResize
+      const containerSize = () => {
+        return {
+          height: this.container.clientHeight
+        }
+      }
+
+      let { container_height } = containerSize()
+
+      this.autoHeightTimer = setInterval(() => {
+        let {width, height} = containerSize()
+        if (height !== container_height) {
+          container_height = height
+          this.resize()
+        }
+      }, 10);
+
     },
 
     destroyed() {
       clearInterval(this.resizeTimer);
+      clearInterval(this.autoHeightTimer);
       if (this.infiniteTimer) clearInterval(this.infiniteTimer);
     },
 
@@ -425,9 +451,9 @@
 
       touchStart(e) {
         // Don't react if initial down happens on a form element
-        // if (e.target.tagName.match(/input|textarea|select/i)) {
-        //   return
-        // }
+        if (!this.formListScroll && e.target.tagName.match(/input|textarea|select/i)) {
+          return
+        }
         this.scroller.doTouchStart(e.touches, e.timeStamp)
       },
 
@@ -442,9 +468,9 @@
 
       mouseDown(e) {
         // Don't react if initial down happens on a form element
-        // if (e.target.tagName.match(/input|textarea|select/i)) {
-        //   return
-        // }
+        if (!this.formListScroll && e.target.tagName.match(/input|textarea|select/i)) {
+          return
+        }
         this.scroller.doTouchStart([{
           pageX: e.pageX,
           pageY: e.pageY
